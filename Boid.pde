@@ -1,7 +1,9 @@
 // The Boid class
 
-float rangeLinesOutter = 65, rangeCohesionDist = 60, rangeAlignDist = 60, rangeDesiredSeparation = 40.0f;
+float rangeLinesOutter = 63, rangeCohesionDist = 96.5, rangeAlignDist = 80.5, rangeDesiredSeparation = 63, rangeColorAveraging = 63.5f;
 boolean drawOutterLines = false;
+
+
 class Boid {
   int id;
   float age = 0; // used to respawn boids and keep their color ~fresh~
@@ -30,6 +32,7 @@ class Boid {
   }
 
   void run(ArrayList<Boid> boids) {
+    //if(DEBUG) {print("Flocking");}
     flock(boids);
     update();
     borders();
@@ -52,24 +55,33 @@ class Boid {
 
   // We accumulate a new acceleration each time based on three rules
   void flock(ArrayList<Boid> boids) {
-    PVector sep = separate(boids);   // Separation
-    PVector ali = align(boids);      // Alignment
-    PVector coh = cohesion(boids);   // Cohesion
+    PVector sep;
+    PVector ali;
+    PVector coh;
+    if (followFlightRules){
+      sep = separate(boids);   // Separation
+      ali = align(boids);      // Alignment
+      coh = cohesion(boids);   // Cohesion
+      
+    // Arbitrarily weight these forces
+      sep.mult(1.5);
+      ali.mult(1.0);
+      coh.mult(1.0);
+    
+    // Add the force vectors to acceleration
+    //setColor()
+    applyForce(sep);
+    applyForce(ali);
+    applyForce(coh);
+    } else {
+      sep = repell(boids);
+    }
     PVector locCols = avgColorVec(boids);
     this.age +=0.1;
     //print(this.age);
     if (this.age >= deathAge) {
       this.respawn();
     }
-    // Arbitrarily weight these forces
-    sep.mult(1.5);
-    ali.mult(1.0);
-    coh.mult(1.0);
-    // Add the force vectors to acceleration
-    //setColor()
-    applyForce(sep);
-    applyForce(ali);
-    applyForce(coh);
   }
 
   // Method to update position
@@ -128,7 +140,7 @@ class Boid {
       noStroke();
       translate(position.x, position.y, (position.z)); 
         
-      sphereDetail(8);
+      sphereDetail(6);
       sphere(6);
       
       popMatrix();
@@ -158,7 +170,44 @@ class Boid {
     if (position.z > depth+r) position.z = -r;
     
   }
+  // Separation
+  // Method checks for nearby boids and steers away
+  PVector repell (ArrayList<Boid> boids) {
+    float desiredseparation = 1000;
+    PVector steer = new PVector(0, 0, 0);
+    int count = 0;
+    // For every boid in the system, check if it's too close
+    for (Boid other : boids) {
+      float d = PVector.dist(position, other.position);
+      // If the distance is greater than 0 and less than an arbitrary amount (0 when you are yourself)
+      if ((d > 0) && (d < desiredseparation)) {
+        // Calculate vector pointing away from neighbor
+        PVector diff = PVector.sub(position, other.position);
+        diff.normalize();
+        diff.div(d*d);        // Weight by distance
+        steer.add(diff);
+        count++;            // Keep track of how many
+      }
+    }
+    // Average -- divide by how many
+    if (count > 0) {
+      steer.div((float)count);
+    }
 
+    // As long as the vector is greater than 0
+    if (steer.mag() > 0) {
+      // First two lines of code below could be condensed with new PVector setMag() method
+      // Not using this method until Processing.js catches up
+      // steer.setMag(maxspeed);
+
+      // Implement Reynolds: Steering = Desired - Velocity
+      steer.normalize();
+      steer.mult(maxspeed);
+      steer.sub(velocity);
+      steer.limit(4*maxforce);
+    }
+    return steer;
+  }
   // Separation
   // Method checks for nearby boids and steers away
   PVector separate (ArrayList<Boid> boids) {
@@ -255,8 +304,8 @@ class Boid {
   
   
   PVector avgColorVec(ArrayList<Boid> boids) {
-    float colorfov = 40.5f;
-    float mutationrange=8;
+    float colorfov = rangeColorAveraging;
+    float mutationrange=9;
     PVector avgColorOfLocalBoids=new PVector().add(this.boidColor);
     //avgColorOfLocalBoids.normalize();
     int count = 1;

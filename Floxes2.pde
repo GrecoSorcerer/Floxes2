@@ -10,18 +10,29 @@ import peasy.*;
 Flock flock;
 
 //##################################
-//###			Config			 ###
+//###		    	Config		      	 ###
 //##################################
 
 // Sets the initial window Size. Also controls size of Floxes boundary.
 int depth;
+
 // Change this to set the initial flock size.
-int flocksize = 500;
+int flocksize = 200;
+
+// A Value used to adjust Flox parameters.
 float modifier = 0.5;
+
 // Enable debug outputs to console.
 boolean DEBUG = true;
+
 // Change how Floxes renders.
-boolean uses3D = false;
+boolean uses3D = true;
+
+// Press keys to play the Balalaika.
+boolean balalaikaMode = false;
+
+// Causes Floxes to fly away from one another.
+boolean followFlightRules = true;
 
 float averageAge;
 
@@ -30,7 +41,7 @@ float lastAvAge;
 PeasyCam camera;
 void setup() {
 
-  size(600, 600, P3D);
+  size(900, 900, P3D);
   depth = width;
 
   // A new flock is created here.
@@ -86,34 +97,42 @@ void keyPressed() {
   int special = keyCode;
 
   if (DEBUG) {
-    print("\n[DEBUG] KeyPressed ["+pressed+"]");
-    print("\n[DEBUG] KeyCode ["+keyCode+"]");
+    print("\n[DEBUG][Input] KeyPressed ["+pressed+"]");
+    print("\n[DEBUG][Input] KeyCode ["+keyCode+"]");
   }
 
   switch(pressed) {
     case('v'):
-    print("\n[CONFIGS] 3D view enabled.");
+    print("\n[DEBUG][CONFIGS] 3D view enabled.");
     uses3D = !uses3D;
     break;
     case('s'):
     rangeDesiredSeparation += modifier;
-    print("\n[CONFIGS] Changed separation by " + modifier + ", separation is now " + rangeDesiredSeparation);
+    print("\n[DEBUG][CONFIGS] Changed separation by " + modifier + ", separation is now " + rangeDesiredSeparation);
     break;
     case('a'):
     rangeAlignDist += modifier;
-    print("\n[CONFIGS] Changed alignment by " + modifier + ", alignment is now " + rangeAlignDist);
+    print("\n[DEBUG][CONFIGS] Changed alignment by " + modifier + ", alignment is now " + rangeAlignDist);
     break;
     case('d'):
     rangeCohesionDist += modifier;
-    print("\n[CONFIGS] Changed cohesion by " + modifier + ", cohesion is now " + rangeCohesionDist);
+    print("\n[DEBUG][CONFIGS] Changed cohesion by " + modifier + ", cohesion is now " + rangeCohesionDist);
     break;
     case('l'):
     rangeLinesOutter += modifier;
-    print("\n[CONFIGS] Changed rangeLines by " + modifier + ", Separation is now " + rangeLinesOutter);
+    print("\n[DEBUG][CONFIGS] Changed rangeLines by " + modifier + ", Separation is now " + rangeLinesOutter);
     break;
     case('q'):
     drawOutterLines = !drawOutterLines;
-    print("\n[CONFIGS] Draw outer lines " + drawOutterLines);
+    print("\n[DEBUG][CONFIGS] Draw outer lines " + drawOutterLines);
+    break;
+    case('c'):
+    rangeColorAveraging += modifier;
+    print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + rangeColorAveraging);
+    break;
+    case('r'):
+    followFlightRules = !followFlightRules;
+    print("\n[DEBUG][CONFIGS] Follow Flight Rules " + followFlightRules);
     break;
   }
   switch(keyCode) {
@@ -124,6 +143,10 @@ void keyPressed() {
     case(DOWN):
     modifier -= 0.5;
     print("\n[CONFIGS] Incriment: " + modifier);
+    break;
+    case(17):
+    modifier *= -1;
+    print("\n[CONFIGS] Flipped sign: " + modifier);
     break;
     
     default:
