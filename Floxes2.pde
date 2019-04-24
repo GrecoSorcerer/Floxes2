@@ -17,7 +17,7 @@ Flock flock;
 int depth;
 
 // Change this to set the initial flock size.
-int flocksize = 200;
+int flocksize = 450;
 
 // A Value used to adjust Flox parameters.
 float modifier = 0.5;
@@ -58,7 +58,7 @@ void setup() {
 
 
 void draw() {
-  surface.setTitle("FS:"+flock.boids.size()+"| avAge" + floor(averageAge) +"| "+frameRate);
+  surface.setTitle("FS:"+flock.boids.size()+"| avAge ~" + floor(averageAge) +"| ~"+floor(frameRate));
   if (uses3D) {
     background(155); 
     camera.lookAt(width/2, height/2, depth/2);
