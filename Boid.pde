@@ -326,6 +326,7 @@ class Boid {
     if (count > mutationrange ) {
       avgColorOfLocalBoids = new PVector(random(0, 255), random(0, 255), random(0, 255));
     }
+    
     setBoidColor(avgColorOfLocalBoids);
     return avgColorOfLocalBoids;
   }

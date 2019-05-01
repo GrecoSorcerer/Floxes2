@@ -7,12 +7,15 @@
 // TODO: clean up code and comments
 // Audio stuff
 import ddf.minim.*;
+import processing.sound.*;
 import java.util.*;
 Minim minim;
 
 AudioPlayer birds1;
-AudioPlayer balalaika, running, rawA, rawBm, rawCsm, rawD, rawE, rawFsm, rawE7; // Balalaika sounds
-AudioPlayer player3;
+AudioPlayer balalaika, running, breath, rawA, rawBm, rawCsm, rawD, rawE, rawFsm, rawE7; // Balalaika sounds
+AudioPlayer static1;
+SoundFile pitchedNote1;
+SoundFile pitchedNote2;
 AudioInput input; 
 
 // Makes seeing gooder 
@@ -61,10 +64,20 @@ void setup() {
   balalaika = minim.loadFile("audio/BalalaikaLoop2.wav");
   balalaika.setGain(-9);
   
-  rawA = minim.loadFile("audio/rawABlka.wav");
-  rawD = minim.loadFile("audio/rawDBlka.wav");
-  rawE = minim.loadFile("audio/rawEBlka.wav");
+  rawA = minim.loadFile("audio/rawABlka.wav"); // Play this sound when alignment is adjusted
+  rawD = minim.loadFile("audio/rawDBlka.wav"); // Play this sound when separation changes
+  rawCsm = minim.loadFile("audio/rawCsmBlka.wav"); // Play this sound when cohesion changes
   
+  rawBm = minim.loadFile("audio/rawBmBlka.wav"); // Play when modifier > 0 when control key is pressed
+  pitchedNote1 = new SoundFile(this, "audio/rawBmBlka.wav"); 
+  pitchedNote2 = new SoundFile(this, "audio/rawEBlka.wav"); 
+  rawE = minim.loadFile("audio/rawEBlka.wav"); // Play when modifier < 0 when control key is pressed
+  rawFsm = minim.loadFile("audio/rawFsmBlka.wav"); // Play when modifier = 0 when control key is pressed
+  
+  
+  
+  static1 = minim.loadFile("audio/static1.wav");
+  static1.setGain(-4);
   
   birds1 = minim.loadFile("audio/birds1.wav");
   birds1.setGain(5);
@@ -72,6 +85,9 @@ void setup() {
   running = minim.loadFile("audio/running.wav");
   running.setLoopPoints(0,700);
   running.setGain(7);
+  
+  breath = minim.loadFile("audio/breath.wav");
+  breath.setGain(7);
   
   // A new flock is created here.
   flock = new Flock();
@@ -89,11 +105,11 @@ void setup() {
 
 
 void draw() {
-  
+  //pitchedNote.play();
   surface.setTitle("FS:"+flock.boids.size()+"| avAge ~" + floor(averageAge) +"| ~"+floor(frameRate));
   
   if (uses3D) {
-    background(155); 
+    background(#4BBEE3); 
     camera.lookAt(width/2, height/2, depth/2);
   } else {
     background(50); 
@@ -117,6 +133,7 @@ void draw() {
     // Sets lighting on Boids
     lights();
     smooth();
+    ambientLight(150,150,150,width/2,height/2,depth/2);
     pushMatrix();
     noFill();
     strokeWeight(2);
@@ -129,6 +146,7 @@ void draw() {
   flock.run();
 
   strokeWeight(1);
+  //pitchedNote.stop();
 }
 void mousePressed() {
   if (mouseButton == LEFT) {
@@ -178,8 +196,8 @@ void keyPressed() {
     case('d'):
     rangeCohesionDist += modifier;
     print("\n[DEBUG][CONFIGS] Changed cohesion by " + modifier + ", cohesion is now " + rangeCohesionDist);
-    rawE.play();
-    rawE.rewind();
+    rawCsm.play();
+    rawCsm.rewind();
     timedBoolFlip(500, followFlightRules);
     break;
     case('l'):
@@ -188,6 +206,8 @@ void keyPressed() {
     break;
     case('q'):
     drawOutterLines = !drawOutterLines;
+    static1.play();
+    static1.rewind();
     print("\n[DEBUG][CONFIGS] Draw outer lines " + drawOutterLines);
     break;
     case('c'):
@@ -202,14 +222,41 @@ void keyPressed() {
   switch(keyCode) {
     case(UP):
     modifier += 0.5;
+    if (modifier > 0){
+      pitchedNote1.play(modifier/2);
+    }
+    else if (modifier < 0) {
+      pitchedNote2.play(1/(modifier));
+      print(1/(modifier*10));
+    }
+    
     print("\n[CONFIGS] Incriment: " + modifier);
     break;
     case(DOWN):
     modifier -= 0.5;
+    if (modifier > 0){
+      pitchedNote1.play(modifier/2);
+    }
+    else if (modifier < 0) {
+      pitchedNote2.play(1/(-modifier));
+      print(1/(modifier*10));
+    }
     print("\n[CONFIGS] Incriment: " + modifier);
     break;
     case(17):
     modifier *= -1;
+    if (modifier>0){
+      rawBm.play();
+      rawBm.rewind();
+    } 
+    else if (modifier < 0) {
+      rawE.play();
+      rawE.rewind();
+    } 
+    else {
+      rawFsm.play();
+      rawFsm.rewind();
+    }
     print("\n[CONFIGS] Flipped sign: " + modifier);
     break;
     
