@@ -109,7 +109,7 @@ void draw() {
   surface.setTitle("FS:"+flock.boids.size()+"| avAge ~" + floor(averageAge) +"| ~"+floor(frameRate));
   
   if (uses3D) {
-    background(#4BBEE3); 
+    background(#4BBEE3); //Zima Blue
     camera.lookAt(width/2, height/2, depth/2);
   } else {
     background(50); 
@@ -226,8 +226,8 @@ void keyPressed() {
       pitchedNote1.play(modifier/2);
     }
     else if (modifier < 0) {
-      pitchedNote2.play(1/(modifier));
-      print(1/(modifier*10));
+      pitchedNote2.play(1/(-modifier));
+      print(1/(-modifier));
     }
     
     print("\n[CONFIGS] Incriment: " + modifier);
@@ -239,7 +239,7 @@ void keyPressed() {
     }
     else if (modifier < 0) {
       pitchedNote2.play(1/(-modifier));
-      print(1/(modifier*10));
+      print(1/(-modifier));
     }
     print("\n[CONFIGS] Incriment: " + modifier);
     break;
