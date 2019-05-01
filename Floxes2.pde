@@ -2,6 +2,18 @@
  | Welcome to the Floxes 2 SRC, this is an extension of the 
  | Flocking simulation listed on the Processing examples page.
  */
+// TODO: A way to see controls and get feedback on changes
+// TODO: mainmenu, more sounds
+// TODO: clean up code and comments
+// Audio stuff
+import ddf.minim.*;
+import java.util.*;
+Minim minim;
+
+AudioPlayer birds1;
+AudioPlayer balalaika, running, rawA, rawBm, rawCsm, rawD, rawE, rawFsm, rawE7; // Balalaika sounds
+AudioPlayer player3;
+AudioInput input; 
 
 // Makes seeing gooder 
 import peasy.*;
@@ -43,7 +55,24 @@ void setup() {
 
   size(900, 900, P3D);
   depth = width;
-
+  
+  Minim minim = new Minim(this);
+  
+  balalaika = minim.loadFile("audio/BalalaikaLoop2.wav");
+  balalaika.setGain(-9);
+  
+  rawA = minim.loadFile("audio/rawABlka.wav");
+  rawD = minim.loadFile("audio/rawDBlka.wav");
+  rawE = minim.loadFile("audio/rawEBlka.wav");
+  
+  
+  birds1 = minim.loadFile("audio/birds1.wav");
+  birds1.setGain(5);
+  
+  running = minim.loadFile("audio/running.wav");
+  running.setLoopPoints(0,700);
+  running.setGain(7);
+  
   // A new flock is created here.
   flock = new Flock();
 
@@ -54,11 +83,15 @@ void setup() {
   for (int i = 0; i < flocksize; i++) {
     flock.addBoid(new Boid(random(width), random(height), new PVector(random(0, 255), random(0, 255), random(0, 255))));
   }
+  
+  birds1.loop();
 }
 
 
 void draw() {
+  
   surface.setTitle("FS:"+flock.boids.size()+"| avAge ~" + floor(averageAge) +"| ~"+floor(frameRate));
+  
   if (uses3D) {
     background(155); 
     camera.lookAt(width/2, height/2, depth/2);
@@ -66,7 +99,13 @@ void draw() {
     background(50); 
     camera.lookAt(width/2, height/2, 0, depth);
   }
-
+  if (!mousePressed){
+    balalaika.rewind();
+    balalaika.pause();
+    running.rewind();
+    running.pause();
+    followFlightRules = true;
+  }
   //Calculate average age of Boids
   float agetotal = 0;
   for(Boid boid: flock.boids) {
@@ -91,6 +130,22 @@ void draw() {
 
   strokeWeight(1);
 }
+void mousePressed() {
+  if (mouseButton == LEFT) {
+    for(Boid boid: flock.boids){
+      boid.velocity=boid.velocity.sub(boid.seek(PVector.random3D()));
+      boid.update();
+    }
+    print("pressed");
+    balalaika.loop();
+    running.loop();
+    followFlightRules = false;
+  }
+}
+
+void timedBoolFlip(int milis, boolean var) {
+  //TODO implement this
+}
 
 void keyPressed() {
   char pressed = Character.toLowerCase(key); // Get the lowercase char of pressed key.
@@ -109,14 +164,23 @@ void keyPressed() {
     case('s'):
     rangeDesiredSeparation += modifier;
     print("\n[DEBUG][CONFIGS] Changed separation by " + modifier + ", separation is now " + rangeDesiredSeparation);
+    rawD.play();
+    rawD.rewind();
+    timedBoolFlip(500, followFlightRules);
     break;
     case('a'):
     rangeAlignDist += modifier;
     print("\n[DEBUG][CONFIGS] Changed alignment by " + modifier + ", alignment is now " + rangeAlignDist);
+    rawA.play();
+    rawA.rewind();
+    timedBoolFlip(500, followFlightRules);
     break;
     case('d'):
     rangeCohesionDist += modifier;
     print("\n[DEBUG][CONFIGS] Changed cohesion by " + modifier + ", cohesion is now " + rangeCohesionDist);
+    rawE.play();
+    rawE.rewind();
+    timedBoolFlip(500, followFlightRules);
     break;
     case('l'):
     rangeLinesOutter += modifier;
