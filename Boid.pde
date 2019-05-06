@@ -2,7 +2,7 @@
 
 float rangeLinesOutter = 63, rangeCohesionDist = 96.5, rangeAlignDist = 80.5, rangeDesiredSeparation = 63, rangeColorAveraging = 63.5f;
 boolean drawOutterLines = false;
-
+float maxColorDist = 40;
 
 class Boid {
   int id;
@@ -122,7 +122,7 @@ class Boid {
     for (Boid other : boids) {
       float d = PVector.dist(position, other.position);
       
-      if ((uses3D) && ((d>40 && d<=connectionrange) || (drawOutterLines) && (d>=connectionrange+50 && d<connectionrange+100))) {
+      if ((uses3D) && ((d>40 && d<=rangeCohesionDist) || (drawOutterLines) && (d>=connectionrange+50 && d<connectionrange+100))) {
         stroke(this.boidColor.x,this.boidColor.y,this.boidColor.z, 155);
         strokeWeight(2);
         line(this.position.x,this.position.y,this.position.z,other.position.x,other.position.y,other.position.z);
@@ -172,6 +172,7 @@ class Boid {
   }
   // Separation
   // Method checks for nearby boids and steers away
+  // Originally defined by {Not me}, but I've updated it to work in 3D space
   PVector repell (ArrayList<Boid> boids) {
     float desiredseparation = 1000;
     PVector steer = new PVector(0, 0, 0);
@@ -210,6 +211,7 @@ class Boid {
   }
   // Separation
   // Method checks for nearby boids and steers away
+  // Originally defined by {Not me}, but I've updated it to work in 3D space
   PVector separate (ArrayList<Boid> boids) {
     float desiredseparation = rangeDesiredSeparation;
     PVector steer = new PVector(0, 0, 0);
@@ -249,6 +251,7 @@ class Boid {
 
   // Alignment
   // For every nearby boid in the system, calculate the average velocity
+  //Originally defined by {Not me}, but I've updated it to work in 3D space
   PVector align (ArrayList<Boid> boids) {
     float neighbordist = rangeAlignDist;
     PVector sum = new PVector(0, 0, 0);
@@ -282,6 +285,7 @@ class Boid {
 
   // Cohesion
   // For the average position (i.e. center) of all nearby boids, calculate steering vector towards that position
+  //Originally defined by {Not me}, but I've updated it to work in 3D space
   PVector cohesion (ArrayList<Boid> boids) {
     float neighbordist = rangeCohesionDist;
     PVector sum = new PVector(0, 0, 0);   // Start with empty vector to accumulate all positions
@@ -302,21 +306,38 @@ class Boid {
     }
   }
   
-  
+  /** A function I wrote that takes the list of boids and compares the current to 
+    * all boids in the ArrayList, checking if its within it's range. If two boids are within
+    * the designated range average their colors and set their color to that.
+    */
   PVector avgColorVec(ArrayList<Boid> boids) {
+    
+    // Set the local colorfov to the globabl variable rangeColorAveraging declared in Floxes2.pde, controlled with the C key
     float colorfov = rangeColorAveraging;
+    
+    // An arbitary number of local boids a boid will stop at. Maybe this could be defined randomly in boid contstructor.
     float mutationrange=9;
-    PVector avgColorOfLocalBoids=new PVector().add(this.boidColor);
-    //avgColorOfLocalBoids.normalize();
+    
+    // Processing doesnt let us average two colors like your would a vector, so thats exactly what I used.
+    //By using a vector here it simplifies the code needed to average multiple boids colors.
+    //We add the active boids color to the avgColorOfLocalBoids PVector so that it takes itself into account.
+    PVector avgColorOfLocalBoids = new PVector().add(this.boidColor);
+    // Set the count to one, since there is one boid being averaged so far
     int count = 1;
-
+    
+    //Here we get each boid element OTHER from the ArrayList of boids
     for (Boid other : boids) {
+      //Check the distance between the active boid and the OTHER boid
       float d = PVector.dist(position, other.position);
+      // Check the distance between two colors.
+      // We use the distance between two colors to check if the colors are sufficently close enough or different enough to be averaged.
       float colordist = PVector.dist(this.boidColor, other.boidColor);
       if (d>0 && d < colorfov) {
-        if (colordist < 10) {
+        // Compare colorDist oto maxColorDist. maxColor dist is controlled with the X key
+        if (colordist < maxColorDist) {
           continue;
         }
+        // if the two colors are within range, and the colors have sufficient distance. then it will be added to the PVector avgColorOfLocalBoids
         avgColorOfLocalBoids.add(other.boidColor);
         count++;
       }
@@ -324,9 +345,10 @@ class Boid {
     //avgColorOfLocalBoids.normalize();
     avgColorOfLocalBoids.div(count);
     if (count > mutationrange ) {
+      //if count is less the mutation range, spice it up and set the aveColorofLocalBoids to a random PVector.
       avgColorOfLocalBoids = new PVector(random(0, 255), random(0, 255), random(0, 255));
     }
-    
+    //Here we update the avtive boids color
     setBoidColor(avgColorOfLocalBoids);
     return avgColorOfLocalBoids;
   }

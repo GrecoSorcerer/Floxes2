@@ -32,7 +32,7 @@ Flock flock;
 int depth;
 
 // Change this to set the initial flock size.
-int flocksize = 450;
+int flocksize = 700;
 
 // A Value used to adjust Flox parameters.
 float modifier = 0.5;
@@ -214,6 +214,11 @@ void keyPressed() {
     rangeColorAveraging += modifier;
     print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + rangeColorAveraging);
     break;
+    case('x'):
+    //rangeColorAveraging += modifier;
+    maxColorDist += modifier;
+    print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + maxColorDist);
+    break;
     case('r'):
     followFlightRules = !followFlightRules;
     print("\n[DEBUG][CONFIGS] Follow Flight Rules " + followFlightRules);
@@ -261,7 +266,15 @@ void keyPressed() {
     break;
     
     default:
-      // Do nothing
+      if((key % 3 == 0) && (key % 5 == 0)) {
+        
+      }
+      else if(key % 5 == 0){
+        
+      }
+      else if (key % 3 == 0){
+      
+      }
   }
 }
 
