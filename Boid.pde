@@ -5,16 +5,18 @@ boolean drawOutterLines = false;
 float maxColorDist = 40;
 
 class Boid {
+  // Variables that define each boid in the flocking simulation
   int id;
   float age = 0; // used to respawn boids and keep their color ~fresh~
   float deathAge = random(75, 150);
   PVector position;
   PVector velocity;
   PVector acceleration;
-  float r;
+  float r; // Whats this for again?
   float maxforce;    // Maximum steering force
   float maxspeed;    // Maximum speed
   PVector boidColor;
+  
   Boid(float x, float y, PVector boidColor) {
     acceleration = new PVector(0, 0, 0);
     this.boidColor = boidColor; 
@@ -96,6 +98,7 @@ class Boid {
   }
 
   // A method that calculates and applies a steering force towards a target
+  // Originally defined by {Not me}, but I've updated it to work in 3D space
   // STEER = DESIRED MINUS VELOCITY
   PVector seek(PVector target) {
     PVector desired = PVector.sub(target, position);  // A vector pointing from the position to the target
@@ -112,25 +115,30 @@ class Boid {
     steer.limit(maxforce);  // Limit to maximum steering force
     return steer;
   }
-
+  
+  // Originally defined by {Not me}, but I've updated it to work in 3D space, as well as to include a few other aesthetic choices.
   void render(ArrayList<Boid> boids) {
     // Draw a triangle rotated in the direction of velocity
     float theta = velocity.heading() + radians(90);
     // heading2D() above is now heading() but leaving old syntax until Processing.js catches up
     float connectionrange = rangeLinesOutter;
+    // Keep the number of lines each boid can have to a manageable number
+    int maxLines = 40;
     
+    int lines = 0; // Count of number of lines that have been drawn for a boid. if > 40 don't draw anymore.
     for (Boid other : boids) {
       float d = PVector.dist(position, other.position);
       
-      if ((uses3D) && ((d>40 && d<=rangeCohesionDist) || (drawOutterLines) && (d>=connectionrange+50 && d<connectionrange+100))) {
-        stroke(this.boidColor.x,this.boidColor.y,this.boidColor.z, 155);
+      if ((uses3D) && ((d>40 && d<=rangeDesiredSeparation) || (drawOutterLines) && (d>=rangeDesiredSeparation+50 && d<connectionrange+100)) && lines < maxLines) {
+        stroke(this.boidColor.x,this.boidColor.y,this.boidColor.z, 155); //Line color is the average of source boid and destination boid
         strokeWeight(2);
-        line(this.position.x,this.position.y,this.position.z,other.position.x,other.position.y,other.position.z);
+        line(this.position.x,this.position.y,this.position.z,other.position.x,other.position.y,other.position.z); // Draw the lines
+        lines++;
       }
     }
    
     
-    //print(averageAge);
+    // Used to change how boids are rendered on the screen.
     if (uses3D) {
       fill(this.boidColor.x, this.boidColor.y, this.boidColor.z,200);
       //stroke(boidColor.x, boidColor.y, boidColor.z);
