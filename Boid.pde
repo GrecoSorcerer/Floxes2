@@ -1,5 +1,13 @@
+/*
+ | Welcome to the Floxes 2 SRC, this is an extension of the 
+ | Flocking simulation listed on the Processing examples page.
+ *
+ | Salvatore Greco
+ | 5/6/2019
+ | slgreco@buffalo.edu
+ | github: https://github.com/GrecoSorcerer/Floxes2
+ */
 // The Boid class
-
 float rangeLinesOutter = 63, rangeCohesionDist = 96.5, rangeAlignDist = 80.5, rangeDesiredSeparation = 63, rangeColorAveraging = 63.5f;
 boolean drawOutterLines = false;
 float maxColorDist = 40;
@@ -129,7 +137,7 @@ class Boid {
     for (Boid other : boids) {
       float d = PVector.dist(position, other.position);
       
-      if ((uses3D) && ((d>40 && d<=rangeDesiredSeparation) || (drawOutterLines) && (d>=rangeDesiredSeparation+50 && d<connectionrange+100)) && lines < maxLines) {
+      if ((uses3D) && ((d>40 && d<=rangeCohesionDist) || (drawOutterLines) && (d>=rangeDesiredSeparation+50 && d<connectionrange+100)) && lines < maxLines) {
         stroke(this.boidColor.x,this.boidColor.y,this.boidColor.z, 155); //Line color is the average of source boid and destination boid
         strokeWeight(2);
         line(this.position.x,this.position.y,this.position.z,other.position.x,other.position.y,other.position.z); // Draw the lines
