@@ -18,7 +18,7 @@ import java.util.*;
 
 //initializing sound file variables
 Minim minim;
-AudioPlayer birds1;
+AudioPlayer birds1, birds2;
 AudioPlayer balalaika, running, breath, rawA, rawBm, rawCsm, rawD, rawE, rawFsm, rawE7; // Balalaika sounds
 AudioPlayer static1;
 SoundFile pitchedNote1;
@@ -41,8 +41,9 @@ PVector _bottom;
 
 //Start with "menu"
 boolean menu = true;
-//2D Array of Box objects
+//2D Array of Box objects for menu stuff.
 Boxes[][] boxes;
+//Global varibles used to rotate the boxes and mouse distance to center
 float angle,distance2Center_m;
 // number of boxes
 int boxCount=3;
@@ -91,10 +92,10 @@ void setup() {
   
   // Vectors used to determine average positioning for panning the birds
   //============]
-    _left = new PVector(width,height/2,depth/2);
-    _right = new PVector(0,height/2,depth/2);
-    //_top;  // TODO
-    //_bottom;  // TODO
+    _left = new PVector(width, height/2, depth/2);
+    _right = new PVector(0, height/2, depth/2);
+    _top = new PVector(width/2, height, depth/2);  
+    _bottom = new PVector(width/2, 0, depth/2);  
   //============]
   /**
     * This section brings in all the sounds the project uses.
@@ -125,6 +126,9 @@ void setup() {
   birds1 = minim.loadFile("audio/birds1.wav");
   // Setting the volume of the sound
   birds1.setGain(5);
+  birds2 = minim.loadFile("audio/birds2.wav"); 
+  birds2.setGain(-3);
+  
   
   running = minim.loadFile("audio/running.wav");
   running.setLoopPoints(0,700);
@@ -198,8 +202,10 @@ void setBirdPan() {
   averagePosition.div(flocksize);
   // Map the differnce between average postion to the left and right to a range of -1 and 1.
   // This is done to conform our value to the setPan(  ) function call
-  float mapped = map(averagePosition.dist(_left)-averagePosition.dist(_right), -150, 150, -1,1);
-  birds1.setPan(mapped);
+  float mappedLR = map(averagePosition.dist(_left)-averagePosition.dist(_right), -150, 150, -1,1);
+  float mappedTB = map(averagePosition.dist(_top)-averagePosition.dist(_bottom), -150, 150, -1,1);
+  birds1.setPan(mappedLR);
+  birds2.setPan(mappedTB);
   //print("\n\n"+leftAvd+"\n"+rightAvd+"\n\n");
   //print(leftAvd-rightAvd);
 }
@@ -271,11 +277,16 @@ void draw() {
   if (menu) {
     drawMenu();
     camera.lookAt(width/2, height/2, 0, depth);
+	// I forgot I had a globabl set up for
+	// getting the distance of the mouse to the center of each menu draw
+	// but forgot I had it. I'll add that here later when I have the time 
+	// to test changes to this section.
     if(mousePressed && (dist(mouseX,mouseY, width/2, height/2) <= 40)){
       menu = !menu;
       static1.play();
       static1.rewind();
       birds1.loop();
+	  birds2.loop();
     }
   } 
   else {
@@ -286,27 +297,28 @@ void draw() {
 // Disrupt the simulation if the viewer changes the orientation of the camera.'
 // Boids stop flocking if Left Mouse is pressed
 void mousePressed() {
+  // Disable the rules the boids use to flock together 
+  // and instead try stay as frar from all neighbor boids as possible.
+  followFlightRules = false;
   if (mouseButton == LEFT) {
     for(Boid boid: flock.boids){
+      // Update positions while rules are disabled with a random velocity vector
       boid.velocity=boid.velocity.sub(boid.seek(PVector.random3D()));
       boid.update();
     }
+	// While the mouse is pressed play a song on an out of tune Balalaika
     balalaika.loop();
+	// Play the running sound
     running.loop();
     
-    followFlightRules = false;
-    print(followFlightRules+ "NO RULES");
+    //print(followFlightRules+ " NO RULES"); // Debug changing the bool
   }
-}
-
-void timedBoolFlip(int milis, boolean var) {
-  //TODO implement this
 }
 
 void keyPressed() {
   char pressed = Character.toLowerCase(key); // Get the lowercase char of pressed key.
   int special = keyCode;
-
+  // only display these if debug is enabled
   if (DEBUG) {
     print("\n[DEBUG][Input] KeyPressed ["+pressed+"]");
     print("\n[DEBUG][Input] KeyCode ["+keyCode+"]");
@@ -314,49 +326,49 @@ void keyPressed() {
   // When a key on this list is pressed, trigger the associated effect. If the key isn't mapped the default will trigger.
   switch(pressed) {
     case('v'):
-    print("\n[DEBUG][CONFIGS] 3D view enabled.");
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] 3D view enabled.");}
     uses3D = !uses3D;
     break;
     case('s'):
     rangeDesiredSeparation += modifier;
-    print("\n[DEBUG][CONFIGS] Changed separation by " + modifier + ", separation is now " + rangeDesiredSeparation);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Changed separation by " + modifier + ", separation is now " + rangeDesiredSeparation);}
     rawD.play();
     rawD.rewind();
-    timedBoolFlip(500, followFlightRules);
+    //timedBoolFlip(500, followFlightRules); //Planned but not implemmented
     break;
     case('a'):
     rangeAlignDist += modifier;
-    print("\n[DEBUG][CONFIGS] Changed alignment by " + modifier + ", alignment is now " + rangeAlignDist);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Changed alignment by " + modifier + ", alignment is now " + rangeAlignDist);}
     rawA.play();
     rawA.rewind();
-    timedBoolFlip(500, followFlightRules);
+    //timedBoolFlip(500, followFlightRules); //Planned but not implemmented
     break;
     case('d'):
     rangeCohesionDist += modifier;
-    print("\n[DEBUG][CONFIGS] Changed cohesion by " + modifier + ", cohesion is now " + rangeCohesionDist);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Changed cohesion by " + modifier + ", cohesion is now " + rangeCohesionDist);}
     rawCsm.play();
     rawCsm.rewind();
-    timedBoolFlip(500, followFlightRules);
+    //timedBoolFlip(500, followFlightRules); //Planned but not implemmented
     break;
     case('l'):
     rangeLinesOutter += modifier;
-    print("\n[DEBUG][CONFIGS] Changed rangeLines by " + modifier + ", Separation is now " + rangeLinesOutter);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Changed rangeLines by " + modifier + ", Separation is now " + rangeLinesOutter);}
     break;
     case('q'):
     drawOutterLines = !drawOutterLines;
     static1.play();
     static1.rewind();
-    print("\n[DEBUG][CONFIGS] Draw outer lines " + drawOutterLines);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Draw outer lines " + drawOutterLines);}
     break;
     case('c'):
     rangeColorAveraging += modifier;
-    print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + rangeColorAveraging);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + rangeColorAveraging);}
     break;
     case('x'):
     //rawFsm.play();
     //rawFsm.rewind();
     maxColorDist += modifier;
-    print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + maxColorDist);
+    if (DEBUG) {print("\n[DEBUG][CONFIGS] Changed color avg range " + modifier + " Color avg range is now" + maxColorDist);}
     break;
     
     // This Case has been depricated.
@@ -394,7 +406,7 @@ void keyPressed() {
       print(1/(-modifier));
     }
     
-    print("\n[CONFIGS] Incriment: " + modifier);
+    if (DEBUG) {print("\n[CONFIGS] Incriment: " + modifier);}
     break;
     case(DOWN):
     modifier -= 0.5;
@@ -405,7 +417,7 @@ void keyPressed() {
       pitchedNote2.play(1/(-modifier));
       print(1/(-modifier));
     }
-    print("\n[CONFIGS] Incriment: " + modifier);
+    if (DEBUG) {print("\n[CONFIGS] Incriment: " + modifier);}
     break;
     case(17):
     modifier *= -1;
@@ -421,7 +433,7 @@ void keyPressed() {
       rawFsm.play();
       rawFsm.rewind();
     }
-    print("\n[CONFIGS] Flipped sign: " + modifier);
+    if (DEBUG) {print("\n[CONFIGS] Flipped sign: " + modifier);}
     break;
     
     default:
